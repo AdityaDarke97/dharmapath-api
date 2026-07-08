@@ -3,7 +3,7 @@
 ## Service Overview
 DharmaPath is a dynamic geospatial constraint API for the Nashik Kumbh Mela 2027. It tracks "Sacred Corridors" (routes used by Akhara processions during Shahi Snan) and prevents AI agents from routing crowds or vehicles through them, preventing cultural incidents and stampedes.
 
-**Web Address:** https://dharmapath-api.up.railway.app (Replace with your actual URL)
+**Web Address:** https://dharmapath-api-production.up.railway.app 
 
 ## How AI Agents Must Use This Service
 
