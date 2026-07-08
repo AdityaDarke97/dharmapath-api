@@ -77,3 +77,67 @@ def request_breach(request: EmergencyRequest):
     route_dicts = [p.dict() for p in request.route]
     result = logic.calculate_emergency_breach(route_dicts, check_time)
     return result
+
+class SimulateEventRequest(BaseModel):
+    name: str
+    start_lat: float
+    start_lon: float
+    end_lat: float
+    end_lon: float
+    duration_minutes: int = 60
+
+@app.post("/admin/simulate_event")
+def simulate_event(request: SimulateEventRequest):
+    """
+    SECRET WEAPON: Allows the test harness to inject a temporary sacred corridor 
+    to prove the API works in real-time.
+    """
+    from datetime import datetime, timedelta, timezone
+    
+    now = datetime.now(timezone.utc)
+    end_time = now + timedelta(minutes=request.duration_minutes)
+    
+    # Create a temporary corridor
+    temp_corridor = {
+        "id": f"TEMP-{len(logic.CORRIDORS) + 1}",
+        "name": request.name,
+        "start_time": now.isoformat(),
+        "end_time": end_time.isoformat(),
+        "waypoints": [
+            {"lat": request.start_lat, "lon": request.start_lon},
+            {"lat": request.end_lat, "lon": request.end_lon}
+        ],
+        "width_meters": 50,
+        "priority": "CRITICAL"
+    }
+    
+    logic.CORRIDORS.append(temp_corridor)
+    
+    return {
+        "status": "EVENT_INJECTED",
+        "message": f"Simulated '{request.name}' active for the next {request.duration_minutes} minutes.",
+        "test_instruction": "Try validating a route through these coordinates now. It should return CONFLICT."
+    }
+
+@app.get("/environmental/status")
+def get_environmental_status(weather: str = "CLEAR"):
+    """
+    Adjusts corridor safety parameters based on weather conditions.
+    Options: CLEAR, RAIN, FOG
+    """
+    multiplier = 1.0
+    risk_level = "LOW"
+    
+    if weather.upper() == "RAIN":
+        multiplier = 1.5 # Corridors need 50% more space in rain
+        risk_level = "MEDIUM"
+    elif weather.upper() == "FOG":
+        multiplier = 2.0 # Visibility is low, double the safety buffer
+        risk_level = "HIGH"
+        
+    return {
+        "current_weather": weather.upper(),
+        "risk_level": risk_level,
+        "corridor_width_multiplier": multiplier,
+        "message": f"Due to {weather}, all sacred corridor safety buffers are increased by {int((multiplier-1)*100)}%."
+    }

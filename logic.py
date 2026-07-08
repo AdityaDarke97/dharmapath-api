@@ -61,6 +61,7 @@ def is_route_clear(route_points: List[Dict[str, float]], check_time: datetime) -
     Checks if a proposed route intersects with any active sacred corridors.
     """
     conflicts = []
+    conflicting_corridor_ends = [] # Track end times to calculate wait duration
     
     for corridor in CORRIDORS:
         # Check time overlap
@@ -80,12 +81,29 @@ def is_route_clear(route_points: List[Dict[str, float]], check_time: datetime) -
                             "conflict_point": point,
                             "distance_to_center_meters": round(dist, 2)
                         })
+                        if end not in conflicting_corridor_ends:
+                            conflicting_corridor_ends.append(end)
                         break # No need to check other waypoints for this point
                         
     if conflicts:
-        return {"status": "CONFLICT", "conflicts": conflicts}
+        # Calculate the earliest time the route will be clear
+        earliest_clear_time = min(conflicting_corridor_ends)
+        wait_seconds = (earliest_clear_time - check_time).total_seconds()
+        wait_minutes = int(wait_seconds / 60) + 1 # Add 1 minute buffer for safety
+
+        return {
+            "status": "CONFLICT", 
+            "conflicts": conflicts,
+            "ai_agent_instructions": {
+                "action": "HALT_AND_REROUTE",
+                "estimated_wait_minutes": wait_minutes,
+                "reason": "Sacred procession in progress. Do not attempt to cross.",
+                "suggested_next_step": f"Wait until {earliest_clear_time.isoformat()} or request an alternative route from the Navigation API."
+            }
+        }
     else:
         return {"status": "CLEAR", "message": "Route is safe. No active sacred processions intersect."}
+    
 
 def calculate_emergency_breach(route_points: List[Dict[str, float]], check_time: datetime) -> Dict[str, Any]:
     """

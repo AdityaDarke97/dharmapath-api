@@ -1,33 +1,28 @@
 # DharmaPath API
 
 ## Service Overview
-DharmaPath is a dynamic geospatial constraint API for the Nashik Kumbh Mela 2027. It tracks "Sacred Corridors" (routes used by Akhara processions during Shahi Snan) and prevents AI agents from routing crowds or vehicles through them, preventing cultural incidents and stampedes.
+DharmaPath is a dynamic geospatial constraint API designed for the Nashik Kumbh Mela 2027. It tracks "Sacred Corridors" (routes used by Akhara processions during Shahi Snan) and prevents AI agents from routing crowds, vehicles, or VIPs through them, thereby preventing cultural incidents and stampedes.
 
-**Web Address:** https://dharmapath-api-production.up.railway.app 
+**Web Address:** https://dharmapath-api-production.up.railway.app
 
-## How AI Agents Must Use This Service
+## Core Philosophy for AI Agents
+Kumbh Mela involves millions of pilgrims and strict religious protocols. **Never assume a path is clear.** You MUST validate routes against active sacred processions before moving any group. 
 
-**CRITICAL RULE:** Before moving any group of people, vehicles, or VIPs, you MUST validate the route using this API. Never assume a path is clear.
+## API Endpoints & Usage Guide
 
-### Step 1: Get Valid Coordinates
-If you need to plan a route, first fetch valid Kumbh locations to avoid coordinate hallucination.
+### 1. Get Valid Coordinates (Start Here)
+To prevent coordinate hallucination, fetch valid Kumbh landmarks before planning routes.
 - **Endpoint:** `GET /map/landmarks`
-- **Action:** Use the `lat` and `lon` from this response to build your route.
+- **Action:** Use the provided `lat` and `lon` values to construct your route waypoints.
 
-### Step 2: Check Active Corridors (Optional but recommended)
-See what processions are currently active.
-- **Endpoint:** `GET /corridors/active?time={ISO_TIMESTAMP}`
-- **Example:** `GET /corridors/active?time=2027-08-02T05:00:00Z`
-
-### Step 3: Validate Your Route (MANDATORY)
-Submit your planned route and the exact time of movement.
+### 2. Validate Route (MANDATORY)
+Submit your planned route and the exact time of movement to check for conflicts.
 - **Endpoint:** `POST /route/validate`
 - **Request Body:**
   ```json
   {
     "route": [
       {"lat": 20.0025, "lon": 73.7850},
-      {"lat": 20.0000, "lon": 73.7870},
       {"lat": 19.9975, "lon": 73.7898}
     ],
     "timestamp": "2027-08-02T05:00:00Z"
